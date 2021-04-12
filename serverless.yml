@@ -1,0 +1,49 @@
+service:
+  name: sls-bootcamp-auction-service
+
+plugins:
+  - serverless-bundle
+  - serverless-pseudo-parameters
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  memorySize: 256
+  stage: ${opt:stage, 'dev'}
+  region: ap-southeast-1
+  environment:
+    AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
+  iamRoleStatements:
+    - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
+
+resources:
+  # Telling cloudformation what resources to create
+  Resources:
+    AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
+
+functions:
+  createAuction:
+    handler: src/handlers/createAuction.handler
+    events:
+      - http:
+          method: POST
+          path: /auction
+  getAuctions:
+    handler: src/handlers/getAuctions.handler
+    events:
+      - http:
+          method: GET
+          path: /auctions
+  getAuction:
+    handler: src/handlers/getAuction.handler
+    events:
+      - http:
+          method: GET
+          path: /auction/{id}
+
+# You can put whatever inside here
+# Including configuration for plugins
+custom:
+  AuctionsTable:
+    name: !Ref AuctionsTable
+    arn: !GetAtt AuctionsTable.Arn
