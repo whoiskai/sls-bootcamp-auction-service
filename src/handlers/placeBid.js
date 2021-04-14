@@ -1,8 +1,10 @@
 
 import AWS from 'aws-sdk';
+import validator from '@middy/validator';
 import commonMiddleware from '../lib/commonMiddleware';
 import createError from 'http-errors';
 import { getAuctionById } from './getAuction';
+import placeBidSchema from '../lib/schemas/placeBidSchema';
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 
@@ -55,5 +57,13 @@ async function placeBid(event, context) {
  * httpEventNormalizer auto adjust api gateway event object for non-existent objects (reduce room for errors)
  * httpErrorHandler easier error handling
  */
-export const handler = commonMiddleware(placeBid);
+export const handler = commonMiddleware(placeBid)
+  .use(validator({
+    inputSchema: placeBidSchema,
+    ajvOptions: {
+      useDefaults: true,
+      strict: false,
+    },
+  }));
+
 
