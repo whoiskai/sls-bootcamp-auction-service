@@ -13,8 +13,10 @@ provider:
   region: ap-southeast-1
   environment:
     AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
+    MAIL_QUEUE_URL: ${self:custom.MailQueue.url}
   iamRoleStatements:
     - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
+    - ${file(iam/MailQueueIAM.yml):MailQueueIAM}
 
 resources:
   # Telling cloudformation what resources to create
@@ -28,6 +30,7 @@ functions:
       - http:
           method: POST
           path: /auction
+          authorizer: ${self:custom.authorizer}
   
   getAuctions:
     handler: src/handlers/getAuctions.handler
@@ -35,6 +38,7 @@ functions:
       - http:
           method: GET
           path: /auctions
+          authorizer: ${self:custom.authorizer}
   
   getAuction:
     handler: src/handlers/getAuction.handler
@@ -42,6 +46,7 @@ functions:
       - http:
           method: GET
           path: /auction/{id}
+          authorizer: ${self:custom.authorizer}
   
   placeBid:
     handler: src/handlers/placeBid.handler
@@ -49,6 +54,7 @@ functions:
       - http:
           method: PATCH
           path: /auction/{id}/bid
+          authorizer: ${self:custom.authorizer}
   
   processAuctions:
     handler: src/handlers/processAuctions.handler
@@ -58,8 +64,12 @@ functions:
 # You can put whatever inside here
 # Including configuration for plugins
 custom:
+  authorizer: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:auth-service-${self:provider.stage}-auth
   AuctionsTable:
     name: !Ref AuctionsTable
     arn: !GetAtt AuctionsTable.Arn
+  MailQueue:
+    arn: ${cf:sls-bootcamp-notification-service-${self:provider.stage}.MailQueueArn}
+    url: ${cf:sls-bootcamp-notification-service-${self:provider.stage}.MailQueueUrl}
   bundle:
-    linting: false`
+    linting: false
