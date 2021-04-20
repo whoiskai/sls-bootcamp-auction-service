@@ -14,14 +14,18 @@ provider:
   environment:
     AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
     MAIL_QUEUE_URL: ${self:custom.MailQueue.url}
+    AUCTIONS_BUCKET_NAME: ${self:custom.AuctionsBucket.name}
   iamRoleStatements:
     - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
     - ${file(iam/MailQueueIAM.yml):MailQueueIAM}
+    - ${file(iam/AuctionsBucketIAM.yml):AuctionsBucketIAM}
 
 resources:
   # Telling cloudformation what resources to create
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
+    AuctionsBucket: ${file(resources/AuctionsBucket.yml):AuctionsBucket}
+    AuctionsBucketPolicy: ${file(resources/AuctionsBucket.yml):AuctionsBucketPolicy}
 
 functions:
   createAuction:
@@ -56,10 +60,18 @@ functions:
           path: /auction/{id}/bid
           authorizer: ${self:custom.authorizer}
   
+  uploadAuctionPicture:
+    handler: src/handlers/uploadAuctionPicture.handler
+    events:
+      - http:
+          method: PATCH
+          path: /auction/{id}/picture
+          authorizer: ${self:custom.authorizer}
+
   processAuctions:
     handler: src/handlers/processAuctions.handler
-    # events:
-    #   - schedule: rate(1 minute)
+    events:
+      - schedule: rate(1 minute)
 
 # You can put whatever inside here
 # Including configuration for plugins
@@ -71,5 +83,7 @@ custom:
   MailQueue:
     arn: ${cf:sls-bootcamp-notification-service-${self:provider.stage}.MailQueueArn}
     url: ${cf:sls-bootcamp-notification-service-${self:provider.stage}.MailQueueUrl}
+  AuctionsBucket:
+    name: auctions-bucket-#{AWS::AccountId}-${self:provider.stage}
   bundle:
     linting: false

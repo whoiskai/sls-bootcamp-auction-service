@@ -27,7 +27,7 @@ export async function closeAuction(auction) {
         MessageBody: JSON.stringify({
           subject: "No bids on your auction item :(",
           recipient: seller,
-          body: `Oh no! Your item "${title} didn't get any bids. Better luck next time!`,
+          body: `Oh no! Your item "${title}" didn't get any bids. Better luck next time!`,
         }),
     }).promise();
     return;
