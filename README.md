@@ -15,3 +15,16 @@ npm install
 ```
 
 You are ready to go!
+
+```mermaid
+graph TD
+    A[Login to LifeSG using SingPass] --> B(See balances of credits across schemes)
+    B --> C[Create paynow transfer request via NRIC]
+    C --> D{Is response 'success'}
+    C --> E{Is response 'failure'}
+    D --> |No| E
+    E --> |No| H[Response is 'unknown', try again in n minutes]
+    H --> C
+    D -->|Yes| F[Complete paynow transfer]
+    E -->|Yes| G[Cancel paynow transfer]
+```
